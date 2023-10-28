@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>网上订餐系统_购物车</title>
+        <link rel="shortcut icon" href="img/icons/icon.png"/>
+        <link rel="stylesheet" type="text/css" href="css/global.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+              crossorigin="anonymous">
+        <style>
+            body{
+                background-color: lightgray;
+            }
+            #mainFrame{
+                width: 1100px;
+                margin-top: 60px;
+                margin-bottom: 10px;
+                padding: 20px;
+                background-color: white;
+            }
+            #tab01 tr{
+                border-top: 1px solid black;
+            }
+
+            .model{
+                width: 100%;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.2);
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+            #settleForm{
+                padding: 20px 40px;
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 5px;
+                background-color: white;
+            }
+            #settleForm input[type="text"]{
+                border: 1px solid black;
+                width: 320px;
+            }
+            #settleForm label{
+                font-weight: bold;
+                display: block;
+                margin-bottom: 10px;
+            }
+            #editForm{
+                padding: 20px 40px;
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 5px;
+                background-color: white;
+            }
+            #editForm label{
+                font-weight: bold;
+            }
+            #editForm select{
+                border: 1px solid black;
+                border-radius: 2px;
+                outline: none;
+            }
+            .selectBtn{
+                width: 100px;
+            }
+            .formElement{
+                width: 180px;
+                margin-bottom: 10px;
+            }
+            .submitBtns{
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-between;
+            }
+            .submitBtns input{
+                width: 40%;
+                border: 1px solid gray;
+            }
+        </style>
+    </head>
+    <header id="hd1" class="hd1">
+        <a :href="titleHref">
+            <div class="titleIcon">
+                <img id="icon" class="icon" src="img/icons/icon.png" alt="">
+                <div id="title" class="title">
+                    <strong>网上订餐系统</strong>
+                </div>
+            </div>
+        </a>
+        <div id="searchBar" class="searchBar">
+            <input id="searchText" class="searchText" type="text" onkeydown="">
+            <input id="search" class="search" type="button" onclick="" value="搜索">
+        </div>
+        <div id="navBar_signed" class="navBar" :class="{navBarShow : isSign}">
+            <a :href="personalPage" @mouseover="showSet" @mouseleave="closeSet">{{username}}</a>/
+            <a href="">消息</a>/
+            <a :href="cartPage">购物车</a>/
+            <a :href="orderPage">我的订单</a>
+        </div>
+        <div id="setting" v-show="isShow">
+            <div><a href="" @click="signOut">退出登录</a></div>
+        </div>
+        <div id="navBar_noSigned" class="navBar" :class="{navBarShow : 0}">
+            <a href="/TakeoutSystem/login.html">登录</a>/
+            <a href="/TakeoutSystem/register.html">注册</a>
+        </div>
+    </header>
+    <body>
+        <div class="container" id="mainFrame">
+            <div>
+                <h5 style="font-weight: bold">我的购物车({{cartCount}})</h5>
+            </div>
+            <hr>
+            <div style="display: flex; justify-items: center; padding: 0 20px" v-show="!isManage">
+                <input type="button" class="btn btn-sm" value="结算" @click="openSettlement"
+                       style="width: 80px; color: white; background-color: orangered" :disabled="!isEnableBtn">
+                <input type="button" class="btn btn-sm" value="管理" @click="openManage"
+                       style="width: 80px; border: 1px solid gray; margin-left: 10px">
+                <div style="display: flex; align-items: center; margin-left: auto">
+                    总价：<span style="color: red; font-weight: bold">￥{{totalPrice}}</span>
+                </div>
+            </div>
+            <div style="display: flex; justify-items: center; padding: 0 20px" v-show="isManage">
+                <input type="button" class="btn btn-sm" value="删除" @click="delFromCart"
+                       style="width: 80px; border: 1px solid gray;" :disabled="!isEnableBtn">
+                <input type="button" class="btn btn-sm" value="完成" @click="exitManage"
+                       style="width: 80px; border: 1px solid gray; margin-left: 10px">
+            </div>
+            <hr>
+            <div id="cartTab" style="margin-left: 20px">
+                <div v-show="noResult"
+                     style="width: 1050px; height: 40px; line-height: 40px; text-align: center; font-weight: bold">
+                    购物车中没有餐品！
+                </div>
+                <table id="tab01" v-show="!noResult">
+                    <tr>
+                        <th style="width: 160px">菜品图片</th>
+                        <th style="width: 160px">菜品名称</th>
+                        <th style="width: 120px">类别</th>
+                        <th style="width: 120px">规格</th>
+                        <th style="width: 100px">单价</th>
+                        <th style="width: 100px">数量</th>
+                        <th style="width: 100px">总价</th>
+                        <th style="width: 160px"></th>
+                    </tr>
+                    <template v-for="(item, index) in cartList">
+                        <tr>
+                            <td><img style="width: 120px" :src="item.image"></td>
+                            <td><a :href="'/TakeoutSystem/detail.html?foodid=' + item.food_id">{{item.food_name}}</a></td>
+                            <td>{{item.classification}}</td>
+                            <td>{{item.specification}}</td>
+                            <td>￥{{item.price}}</td>
+                            <td>{{item.amount}}</td>
+                            <td>￥{{item.price * item.amount}}</td>
+                            <td>
+                                <div style="display: flex; align-items: center">
+                                    <input type="button" class="btn btn-sm"
+                                           style="width: 60px; border: 1px solid black" value="编辑"
+                                           @click="openEdit(item.cart_id, item.food_id, item.specification, item.amount)">
+                                    <input :id="'checkInput' + index" type="checkbox" :value="index"
+                                           @change="totalCount" v-model="formData.checkbox"
+                                           style="width: 31px; height: 31px; margin-left: 40px">
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+            </div>
+            <div class="model" v-show="isSettlement">
+                <div id="settleForm" class="form-group">
+                    <h4>补充订单信息</h4>
+                    <hr>
+                    <label>地址/联系方式</label>
+                    <input type="text" class="form-control" v-model="formData.address" placeholder="地址与联系方式以'/'分隔">
+                    <div class="form-group submitBtns">
+                        <input type="button" class="btn btn-default submitBtn" @click="submitSettlement" value="提交">
+                        <input type="button" class="btn btn-default cancelBtn" @click="closeSettlement" value="取消">
+                    </div>
+                </div>
+            </div>
+            <div class="model" v-show="isEdit">
+                <div id="editForm" class="form-group">
+                    <h4>购物车信息编辑</h4>
+                    <hr>
+                    <div>
+                        <div class="formElement" style="display: inline-block">
+                            <label>菜名：</label>{{showData.foodName}}
+                        </div>
+                        <div class="formElement" style="display: inline-block">
+                            <label>单价：</label>￥{{showData.price}}
+                        </div>
+                    </div>
+                    <div class="formElement" style="display: inline-block">
+                        <label>规格：</label>
+                        <select class="selectBtn" v-model="formData.specification">
+                            <template v-for="item in showData.specifications">
+                                <option>{{item}}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="formElement" style="display: inline-block">
+                        <label>数量：</label>
+                        <div class="amountSel">
+                            <input type="button" class="amountBtn" value="-" @click="amountReduce"/>
+                            <input type="text" class="amountTxt" v-model="formData.amount" @blur="onBlur"/>
+                            <input type="button" class="amountBtn" value="+" @click="amountAdd"/>
+                        </div>
+                    </div>
+                    <div class="form-group submitBtns">
+                        <input type="button" class="btn btn-default submitBtn" @click="submitEdit" value="提交">
+                        <input type="button" class="btn btn-default cancelBtn" @click="closeEdit" value="取消">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <footer id="ft" class="ft1" :class="{ft2 : fixed}">
+        <hr style="color: gray; height: 1px">
+        页脚
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/global.js"></script>
+    <script>
+        let mainFrame = new Vue({
+            el: "#mainFrame",
+            data: {
+                cartList: null,
+                cartCount: 0,
+                totalPrice: 0,
+                noResult: false,
+                isManage: false,
+                isEnableBtn: false,
+                isSettlement: false,
+                isEdit: false,
+
+                showData: {
+                    cart_id: 0,
+                    foodName: null,
+                    specifications: [],
+                    price: 0,
+                },
+
+                formData: {
+                    checkbox: [],
+                    address: null,
+                    amount: 0,
+                    specification: null
+                }
+            },
+            methods: {
+                getCartList: function (){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/getcarts",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then((res)=>{
+                        if(res.data.length===0){
+                            this.noResult = true;
+                        }else{
+                            console.log(res.data);
+                            this.noResult = false;
+                            this.cartList = res.data;
+                            this.cartCount = res.data.length;
+                        }
+                    }, (err)=>{
+                        console.log("error: " + err);
+                        alert("error: " + err);
+                    })
+                },
+                delFromCart: function (){
+                    if(confirm("删除选中餐品？")){
+                        let cartId = [];
+                        for(let box of this.formData.checkbox){
+                            cartId.push(this.cartList[box].cart_id);
+                        }
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/delfromcart",
+                            data: cartId,
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }).then((res)=>{
+                            alert("删除成功！");
+                            window.location.reload();
+                        }, (err)=>{
+                            alert("error: " + err);
+                            console.log("error: " + err);
+                        });
+                    }
+                },
+                openEdit: function (cartId, foodId, specification, amount){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/getfood",
+                        data: foodId,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then((res)=>{
+                        this.showData.foodName = res.data.foodName;
+                        this.showData.price = res.data.price;
+                        this.showData.cart_id = cartId;
+                        this.showData.specifications = res.data.specification.split("/");
+                        this.formData.specification = specification;
+                        this.formData.amount = amount;
+                        this.isEdit = true;
+                    }, (err)=>{
+                        alert(err);
+                        console.log(err);
+                    });
+                },
+                submitEdit: function (){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/updateCartInfo",
+                        data: {
+                            "cartId": this.showData.cart_id,
+                            "specification": this.formData.specification,
+                            "amount": this.formData.amount
+                        },
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then((res)=>{
+                        alert("购物车信息编辑成功！");
+                        window.location.reload();
+                    }, (err)=>{
+                        alert(err);
+                        console.log(err);
+                    })
+                },
+                closeEdit: function (){
+                    this.isEdit = false;
+                },
+                totalCount: function (){
+                    let totalPrice = 0;
+                    for(let item of this.formData.checkbox){
+                        totalPrice += this.cartList[item].price * this.cartList[item].amount;
+                    }
+                    this.totalPrice = totalPrice;
+                    this.enableBtn();
+                },
+                openSettlement: function (){
+                    this.isSettlement = true;
+                },
+                closeSettlement: function (){
+                    this.isSettlement = false;
+                },
+                submitSettlement: function (){
+                    let address = this.formData.address
+                    if(address===""||address===null){
+                        alert("请填写地址！");
+                    }else{
+                        if(address.split("/").length===1||address.split("/").length===2&&address.split("/")[1]===""){
+                            if(!confirm("未填写联系方式，将采用个人资料中的联系方式")){
+                                return;
+                            }
+                        }
+                        let carts = [];
+                        for(let box of this.formData.checkbox){
+                            carts.push(this.cartList[box].cart_id);
+                        }
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/settlement",
+                            data: {
+                                "carts": carts,
+                                "address": this.formData.address
+                            },
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }).then((res)=>{
+                            alert("结算成功！");
+                            console.log(res.data);
+                            window.location.reload();
+                        }, (err)=>{
+                            console.log("error: " + err);
+                        });
+                    }
+                },
+                openManage: function (){
+                    this.isManage = true;
+                },
+                exitManage: function (){
+                    this.isManage = false;
+                },
+                enableBtn: function (){
+                    this.isEnableBtn = this.formData.checkbox.length !== 0;
+                },
+                onBlur: function (){
+                    if(this.formData.amount<1){
+                        this.formData.amount = 1;
+                    }
+                    this.formData.amount = Math.floor(this.formData.amount);
+                },
+                amountReduce: function (){
+                    if(this.formData.amount>1){
+                        this.formData.amount--;
+                    }
+                },
+                amountAdd: function (){
+                    this.formData.amount++;
+                }
+            },
+            mounted: function (){
+                this.getCartList();
+                setTimeout(function (){
+                    footer1.isFixed();
+                }, 50);
+            }
+        });
+    </script>
+</html>

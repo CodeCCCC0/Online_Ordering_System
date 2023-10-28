@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>网上订餐系统_菜品管理</title>
+        <link rel="shortcut icon" href="img/icons/icon.png"/>
+        <link rel="stylesheet" type="text/css" href="css/global.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <style>
+            body{
+                background-color: lightgray;
+            }
+            body input[type="checkbox"]{
+                box-shadow: none !important;
+            }
+            .model{
+                width: 100%;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.2);
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+            .modelForm{
+                padding: 20px 40px;
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 5px;
+                background-color: white;
+            }
+            .modelForm label{
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .modelForm input{
+                margin-bottom: 10px;
+                box-shadow: none !important;
+            }
+            .modelForm input[type="text"]{
+                width: 300px;
+            }
+            #listingForm label{
+                display: block;
+            }
+            .submitBtns{
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-around;
+            }
+            .submitBtns input{
+                width: 40%;
+                border: 1px solid gray;
+            }
+            #mainFrame{
+                width: 1100px;
+                padding: 20px;
+                margin-top: 60px;
+                margin-bottom: 10px;
+                background-color: white;
+            }
+            #foodTab tr{
+                border-top: 1px solid black;
+            }
+            .pageToggle{
+                width: 100%;
+                padding: 10px 20px;
+                display: flex;
+                align-items: center;
+                font-size: 0;
+                justify-content: center;
+            }
+            .pageTog{
+                margin: 0;
+                padding: 0;
+                list-style-type: none;
+            }
+            .pageTog li{
+                font-size: 16px;
+                margin: 0 5px;
+                display: inline-block;
+            }
+            .pageTog a{
+                border: 1px solid gray;
+                padding: 5px 10px;
+                cursor: pointer;
+            }
+            .pageTog a:hover{
+                color: white;
+                background-color: lightskyblue;
+            }
+            .pageTog a:active{
+                color: white;
+                background-color: deepskyblue;
+            }
+            .pageSelect a{
+                background-color: dodgerblue;
+                color: white !important;
+                border: 1px solid dodgerblue;
+            }
+        </style>
+        <header id="hd1" class="hd1">
+            <a :href="titleHref">
+                <div class="titleIcon">
+                    <img id="icon" class="icon" src="img/icons/icon.png" alt="">
+                    <div id="title" class="title">
+                        <strong>网上订餐系统</strong>
+                    </div>
+                </div>
+            </a>
+            <div id="navBar_signed" class="navBar" :class="{navBarShow : isSign}">
+                <a :href="personalPage" @mouseover="showSet" @mouseleave="closeSet">{{username}}</a>/
+                <a href="/TakeoutSystem/orderIndex.html">订单管理</a>
+            </div>
+            <div id="setting" class="managerSetting" v-show="isShow">
+                <div><a href="" @click="signOut">退出登录</a></div>
+            </div>
+            <div id="navBar_noSigned" class="navBar" :class="{navBarShow : 0}">
+                <a href="/TakeoutSystem/login.html">登录</a>/
+                <a href="/TakeoutSystem/register.html">注册</a>
+            </div>
+        </header>
+    </head>
+    <body>
+        <div class="container" id="mainFrame">
+            <div style="display: flex">
+                <h5 style="font-weight: bold">菜品管理</h5>
+                <span style="margin-left: auto">菜品数：{{foodCount}}</span>
+            </div>
+            <hr>
+            <div style="display: inline-flex; align-items: center; width: 100%; margin-bottom: 20px">
+                <input type="text" name="text" v-model="searchText" placeholder=" 搜索菜品"
+                       style="width: 200px">
+                <input type="button" class="btn btn-sm" value="搜索" @click="intoSearch"
+                       style="border: 1px solid black; margin-left: 10px">
+                <input type="button" class="btn btn-sm" value="返回" @click="exitSearch" v-show="isSearch"
+                       style="border: 1px solid black; margin-left: 10px">
+                <div style="margin-left: auto">
+                    <input type="button" class="btn btn-sm" value="取消选择" @click="cancelSel" v-show="isSel"
+                           style="border: 1px solid black">
+                    <input type="button" class="btn btn-sm" value="删除" @click="delFood" v-show="isSel"
+                           style="border: 1px solid black; margin-left: 10px">
+                    <input type="button" class="btn btn-sm" value="上架菜品" @click="openListing"
+                           style="border: 1px solid black; margin-left: 10px">
+                </div>
+            </div>
+            <div id="foodTab">
+                <div v-show="noResult"
+                     style="width: 100%; height: 40px; line-height: 40px; text-align: center; font-weight: bold">
+                    无结果！
+                </div>
+                <table v-show="!noResult" style="width: 100%">
+                    <tr>
+                        <th style="width: 40px">ID</th>
+                        <th style="width: 120px">图片</th>
+                        <th style="width: 140px">菜名</th>
+                        <th style="width: 100px">分类</th>
+                        <th style="width: 140px">规格</th>
+                        <th style="width: 160px">原料</th>
+                        <th style="width: 80px">单价</th>
+                        <th style="width: 80px">销量</th>
+                        <th style="width: 120px"></th>
+                    </tr>
+                    <template v-for="item in foodList">
+                        <tr>
+                            <td>{{item.foodId}}</td>
+                            <td>
+                                <img :src="item.image" style="width: 100px">
+                            </td>
+                            <td>{{item.foodName}}</td>
+                            <td>{{item.classification}}</td>
+                            <td>{{item.specification}}</td>
+                            <td>{{item.ingredients}}</td>
+                            <td>￥{{item.price}}</td>
+                            <td>{{item.salesVolume}}</td>
+                            <td>
+                                <input type="button" class="btn btn-sm" value="编辑"
+                                       @click="intoEdit(item.foodId, item.foodName, item.image, item.classification, item.ingredients, item.specification, item.price)"
+                                       style="border: 1px solid black">
+                                <input type="checkbox" class="btn btn-sm" :value="item.foodId" v-model="formData.selItem"
+                                       @change="showBtn"
+                                       style="width: 31px; height: 31px; margin-left: 10px">
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+            </div>
+            <div class="pageToggle">
+                <ul class="pageTog">
+                    <li><a @click="selPage(1)">首页</a></li>
+                    <template v-for="item in pages">
+                        <li :class="{pageSelect : pageNum === item }">
+                            <a @click="selPage(item)">{{item}}</a>
+                        </li>
+                    </template>
+                    <li><a @click="selPage(pages)">尾页</a></li>
+                </ul>
+            </div>
+            <div class="model" v-show="isListing">
+                <div id="listingForm" class="form-group modelForm">
+                    <h4>菜品上架</h4>
+                    <hr>
+                    <div style="display: flex">
+                        <div style="display: inline-block; flex-direction: column">
+                            <label>菜品名</label>
+                            <input type="text" class="form-control" v-model="formData.foodName">
+                            <label>菜品图片</label>
+                            <input type="file" ref="fileInput" class="form-control" @change="imgPreview"
+                                   style="width: 300px">
+                        </div>
+                        <div style="display: inline-block; vertical-align: top; flex-grow: 1; text-align: center">
+                            <img :src="prvImgSrc" ref="imgdiv" @load="getImageSize"
+                                 style="width: 160px; height: 160px; border: 1px solid black">
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: inline-block; flex-direction: column">
+                            <label>分类</label>
+                            <input type="text" class="form-control" v-model="formData.classification">
+                            <label>规格</label>
+                            <input type="text" class="form-control" v-model="formData.specification"
+                                   placeholder="不同规格间用&quot;/&quot;隔开">
+                        </div>
+                        <div style="display: inline-block; flex-direction: column; margin-left: 10px">
+                            <label>原料</label>
+                            <input type="text" class="form-control" v-model="formData.ingredients">
+                            <label>单价</label>
+                            <input type="text" class="form-control" v-model="formData.price" placeholder="￥">
+                        </div>
+                    </div>
+                    <div class="form-group submitBtns">
+                        <input type="button" class="btn btn-default submitBtn" @click="listingFood" value="提交">
+                        <input type="button" class="btn btn-default cancelBtn" @click="closeListing" value="取消">
+                    </div>
+                </div>
+            </div>
+            <div class="model" v-show="isEdit">
+                <div id="editForm" class="form-group modelForm">
+                    <h4>菜品信息编辑</h4>
+                    <hr>
+                    <div style="display: flex">
+                        <div style="display: inline-block; flex-direction: column">
+                            <label>菜品名</label>
+                            <input type="text" class="form-control" v-model="formData.foodName">
+                            <label>菜品图片</label>
+                            <input type="file" ref="fileInput" class="form-control" @change="imgPreview"
+                                   style="width: 300px">
+                        </div>
+                        <div style="display: inline-block; vertical-align: top; flex-grow: 1; text-align: center">
+                            <img :src="prvImgSrc" ref="imgdiv" @load="getImageSize"
+                                 style="width: 160px; height: 160px; border: 1px solid black">
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display: inline-block; flex-direction: column">
+                            <label>分类</label>
+                            <input type="text" class="form-control" v-model="formData.classification">
+                            <label>规格</label>
+                            <input type="text" class="form-control" v-model="formData.specification"
+                                   placeholder="不同规格间用&quot;/&quot;隔开">
+                        </div>
+                        <div style="display: inline-block; flex-direction: column; margin-left: 10px">
+                            <label>原料</label>
+                            <input type="text" class="form-control" v-model="formData.ingredients">
+                            <label>单价</label>
+                            <input type="text" class="form-control" v-model="formData.price" placeholder="￥">
+                        </div>
+                    </div>
+                    <div class="form-group submitBtns">
+                        <input type="button" class="btn btn-default submitBtn" @click="submitEdit" value="提交">
+                        <input type="button" class="btn btn-default cancelBtn" @click="exitEdit" value="取消">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <footer id="ft" class="ft1" :class="{ft2 : fixed}">
+        <hr style="color: gray; height: 1px">
+        页脚
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/global.js"></script>
+    <script>
+        new Vue({
+            el: "#mainFrame",
+            data: {
+                foodList: [],
+                foodCount: 0,
+                itemsPerPage: 20,
+                pages: 0,
+                pageNum: 1,
+                prvImgSrc: null,
+                searchText: null,
+                noResult: false,
+                isSearch: false,
+                isSel: false,
+                isListing: false,
+                isEdit: false,
+
+                prvData: {
+                    imgWidth: 0,
+                    imgHeight: 0,
+                },
+
+                formData: {
+                    selItem: [],
+                    foodId: null,
+                    imageFile: null,
+                    foodName: null,
+                    classification: null,
+                    ingredients: null,
+                    specification: null,
+                    price: null,
+                }
+            },
+            methods: {
+                getFoods: function (){
+                    axios({
+                        method: "get",
+                        url: "/TakeoutSystem/getfoods?offset=" + (this.pageNum-1)*this.itemsPerPage +
+                            "&limit=" + this.itemsPerPage,
+                    }).then((res)=>{
+                        if(res.data.foodCount===0){
+                            this.foodList = [];
+                            this.noResult = true;
+                        }else{
+                            this.pages = Math.ceil(res.data.foodCount/this.itemsPerPage);
+                            this.foodCount = res.data.foodCount;
+                            this.foodList = res.data.foodList;
+                            this.noResult = false;
+                        }
+                    }, (err)=>{
+                        console.log("error: " + err);
+                    });
+                    setTimeout(()=>{
+                        footer1.isFixed();
+                    }, 80);
+                },
+                searchFoods: function (){
+                    this.isSearch = true;
+                    axios({
+                        method: "get",
+                        url: "/TakeoutSystem/searchallfoods?search=" +
+                            this.searchText + "&offset=" + (this.pageNum-1)*this.itemsPerPage +
+                            "&limit=" + this.itemsPerPage,
+                        headers: {
+                            "Content-Type": "application/json; charset=utf-8"
+                        }
+                    }).then((res)=>{
+                        if(res.data.resultsCount===0){
+                            this.foodList = [];
+                            this.foodCount = 0;
+                            this.noResult = true;
+                        }else{
+                            this.foodList = res.data.foodList;
+                            this.foodCount = res.data.resultsCount;
+                            this.noResult = false;
+                        }
+                    }, (err)=>{
+                        alert(err);
+                        console.log(err);
+                    });
+                    setTimeout(function (){
+                        footer1.isFixed();
+                    }, 50);
+                },
+                delFood: function (){
+                    if(confirm("是否下架选中餐品？")){
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/delfoodsbyid",
+                            data: this.formData.selItem,
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }).then((res)=>{
+                            if(res.data===503){
+                                console.log(res.data);
+                                alert("503 Forbidden!");
+                            }else{
+                                console.log(res.data);
+                                alert("删除成功！");
+                                window.location.reload();
+                            }
+                        }, (err)=>{
+                            console.log(err);
+                            alert(err);
+                        });
+                    }
+                },
+                imgPreview: function (e){
+                    this.formData.imageFile = e.target.files[0];
+                    console.log();
+                    this.prvImgSrc = URL.createObjectURL(this.formData.imageFile);
+                    setTimeout(()=>{
+                        if(this.formData.imageFile.size>1024*200){
+                            alert("图片大小不可超过200KB！");
+                            this.prvImgSrc = null;
+                            this.$refs.fileInput.value = null;
+                        }else if(this.prvData.imgWidth/this.prvData.imgHeight!==1){
+                            alert("图片长宽比限制为1:1！");
+                            this.prvImgSrc = null;
+                            this.$refs.fileInput.value = null;
+                        }else{}
+                    }, 50);
+                },
+                getImageSize: function (){
+                    this.prvData.imgWidth = this.$refs.imgdiv.clientWidth;
+                    this.prvData.imgHeight = this.$refs.imgdiv.clientHeight;
+                },
+                listingFood: function (){
+                    if(this.formData.foodName===""||this.formData.foodName===null){
+                        alert("菜品名不可为空！");
+                    }else if(this.formData.classification===""||this.formData.classification===null){
+                        alert("菜品分类不可为空！");
+                    }else if(this.formData.ingredients===""||this.formData.ingredients===null){
+                        alert("菜品原料不可为空！");
+                    }else if(this.formData.specification===""||this.formData.specification===null){
+                        alert("菜品规格不可为空！");
+                    }else if(this.formData.price===0){
+                        alert("菜品单价不可为空！");
+                    }else{
+                        let formData = new FormData();
+                        formData.append("foodImg", this.formData.imageFile);
+                        formData.append("foodName", this.formData.foodName);
+                        formData.append("classification", this.formData.classification);
+                        formData.append("ingredients", this.formData.ingredients);
+                        formData.append("specification", this.formData.specification);
+                        formData.append("price", this.formData.price);
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/addfood",
+                            data: formData,
+                            headers: {
+                                "Content-Type": "Multipart/form-data"
+                            }
+                        }).then((res)=>{
+                            alert(res.data);
+                            window.location.reload();
+                        }, (err)=>{
+                            alert(err);
+                        });
+                    }
+                },
+                openListing: function (){
+                    this.isListing = true;
+                },
+                closeListing: function (){
+                    this.prvImgSrc = null;
+                    this.$refs.fileInput.value = null;
+                    this.formData.foodName = null;
+                    this.formData.classification = null;
+                    this.formData.ingredients = null;
+                    this.formData.specification = null;
+                    this.formData.price = null;
+                    this.isListing = false;
+                },
+                submitEdit: function (){
+                    if(this.formData.foodName===""||this.formData.foodName===null){
+                        alert("菜品名不可为空！");
+                    }else if(this.formData.classification===""||this.formData.classification===null){
+                        alert("菜品分类不可为空！");
+                    }else if(this.formData.ingredients===""||this.formData.ingredients===null){
+                        alert("菜品原料不可为空！");
+                    }else if(this.formData.specification===""||this.formData.specification===null){
+                        alert("菜品规格不可为空！");
+                    }else if(this.formData.price===0){
+                        alert("菜品单价不可为空！");
+                    }else{
+                        let formData = new FormData();
+                        formData.append("foodId", this.formData.foodId);
+                        formData.append("foodImg", this.formData.imageFile);
+                        formData.append("foodName", this.formData.foodName);
+                        formData.append("classification", this.formData.classification);
+                        formData.append("ingredients", this.formData.ingredients);
+                        formData.append("specification", this.formData.specification);
+                        formData.append("price", this.formData.price);
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/updatefoodinfo",
+                            data: formData,
+                            headers: {
+                                "Content-Type": "Multipart/form-data"
+                            }
+                        }).then((res)=>{
+                            alert(res.data);
+                            window.location.reload();
+                        }, (err)=>{
+                            alert(err);
+                        });
+                    }
+                },
+                intoEdit: function (foodId, foodName, image, classification, ingredients, specification, price){
+                    this.formData.foodId = foodId;
+                    this.prvImgSrc = image;
+                    this.formData.foodName = foodName;
+                    this.formData.classification = classification;
+                    this.formData.ingredients = ingredients;
+                    this.formData.specification = specification;
+                    this.formData.price = price;
+                    this.isEdit = true;
+                },
+                exitEdit: function (){
+                    this.prvImgSrc = null;
+                    this.formData.foodName = null;
+                    this.formData.classification = null;
+                    this.formData.ingredients = null;
+                    this.formData.specification = null;
+                    this.formData.price = null;
+                    this.isEdit = false;
+                },
+                intoSearch: function (){
+                    this.pageNum = 1;
+                    this.searchFoods();
+                },
+                exitSearch: function (){
+                    this.searchText = null;
+                    this.isSearch = false;
+                    this.pageNum = 1;
+                    this.getFoods();
+                },
+                cancelSel: function (){
+                    this.formData.selItem = [];
+                    this.showBtn();
+                },
+                selPage: function (item){
+                    this.pageNum = item;
+                    if(this.isSearch){
+                        this.searchFoods();
+                    }else{
+                        this.getFoods();
+                    }
+                    window.scrollTo(0, 0);
+                },
+                showBtn: function (){
+                    this.isSel = this.formData.selItem.length!==0;
+                }
+            },
+            mounted: function (){
+                this.getFoods();
+                setTimeout(function (){
+                    footer1.isFixed();
+                }, 50);
+            }
+        })
+    </script>
+</html>

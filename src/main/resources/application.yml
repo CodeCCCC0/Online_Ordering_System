@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /TakeoutSystem
+
+spring:
+  thymeleaf:
+    cache: false
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/takeout?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    username: root
+    password: root
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 5
+      idle-timeout: 30000
+  mail:
+    host: smtp.sina.com
+    port: 465
+    username: cyk145@sina.com
+    password: e9f073dc7a118e84
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: test-consumer-group
+      enable-auto-commit: true
+  data:
+    redis:
+      database: 4
+      host: localhost
+      port: 6379
+
+mybatis:
+  mapper-locations: mapper/*.xml
+  type-aliases-package: com.takeout.pojo
+  configuration:
+    use-generated-keys: true
+    map-underscore-to-camel-case: true
+
+logging:
+  level:
+    com.takeout: debug
+
+TakeoutSystem:
+  path:
+    domain: http://localhost:8080

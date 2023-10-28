@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>网上订餐系统_菜品</title>
+        <link rel="shortcut icon" href="img/icons/icon.png"/>
+        <link rel="stylesheet" type="text/css" href="css/global.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+              rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3"
+              crossorigin="anonymous">
+        <style>
+            #selectColumn{
+                width: 1100px;
+                padding: 10px 20px;
+                margin-top: 60px;
+                margin-bottom: 10px;
+                background-color: white;
+            }
+            #selectColumn a{
+                text-decoration: none;
+                margin: 0 5px 0 10px;
+            }
+            .marginTop-10{
+                margin-top: 10px;
+            }
+            #priceLimit{
+                display: flex;
+                position: relative;
+                z-index: 0;
+                align-items: center;
+            }
+            #priceLimit input{
+                width: 80px;
+                margin: 0 5px;
+            }
+            #foodTable{
+                width: 1100px;
+                padding: 20px;
+                margin-bottom: 10px;
+                background-color: white;
+            }
+            .tabUnit{
+                height: 360px;
+            }
+            .tabUnit a{
+                text-decoration: none;
+            }
+            .inTabUnit{
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .unitImg{
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .price{
+                color: red;
+                font-size: 20px;
+                font-weight: bold;
+            }
+            .pageToggle{
+                width: 100%;
+                padding: 10px 20px;
+                display: flex;
+                align-items: center;
+                font-size: 0;
+                justify-content: center;
+            }
+            .pageTog{
+                margin: 0;
+                padding: 0;
+                list-style-type: none;
+            }
+            .pageTog li{
+                font-size: 16px;
+                margin: 0 5px;
+                display: inline-block;
+            }
+            .pageTog a{
+                border: 1px solid gray;
+                padding: 5px 10px;
+            }
+            .pageTog a:hover{
+                color: white;
+                background-color: lightskyblue;
+            }
+            .pageTog a:active{
+                color: white;
+                background-color: deepskyblue;
+            }
+            .pageSelect a{
+                background-color: dodgerblue;
+                color: white;
+                border: 1px solid dodgerblue;
+            }
+            #typeCol a:hover{
+                color: orangered;
+            }
+            #targetCol a:hover{
+                color: orangered;
+            }
+            .classSelected{
+                color: orangered;
+                font-weight: bold;
+            }
+            .emptyResult{
+                width: 100%;
+                height: 200px;
+                position: relative;
+                display: none;
+            }
+            .empty{
+                display: block;
+            }
+        </style>
+    </head>
+    <header id="hd1" class="hd1">
+        <a :href="titleHref">
+            <div class="titleIcon">
+                <img id="icon" class="icon" src="img/icons/icon.png" alt="">
+                <div id="title" class="title">
+                    <strong>网上订餐系统</strong>
+                </div>
+            </div>
+        </a>
+        <div id="searchBar" class="searchBar">
+            <input id="searchText" class="searchText" type="text" v-model="searchText">
+            <input id="search" class="search" type="button" @click="search" value="搜索">
+        </div>
+        <div id="navBar_signed" class="navBar" :class="{navBarShow : isSign}">
+            <a :href="personalPage" @mouseover="showSet" @mouseleave="closeSet">{{username}}</a>/
+            <a href="">消息</a>/
+            <a :href="cartPage">购物车</a>/
+            <a :href="orderPage">我的订单</a>
+        </div>
+        <div id="setting" v-show="isShow">
+            <div><a href="" @click="signOut">退出登录</a></div>
+        </div>
+        <div id="navBar_noSigned" class="navBar" :class="{navBarShow : !isSign}">
+            <a href="/TakeoutSystem/login.html">登录</a>/
+            <a href="/TakeoutSystem/register.html">注册</a>
+        </div>
+    </header>
+    <body style="background-color: lightgray">
+        <div id="outerDiv">
+            <div class="container" id="selectColumn">
+                <div id="typeCol">
+                    <label style="font-weight: bold; margin-right: 28px">分类</label>
+                    <a :class="{classSelected : classSelect === null}"
+                       :href="'/TakeoutSystem/searchFoods.html?search=' + searchText">全部</a>
+                    <template v-for="item in classifications">
+                        /<a :class="{classSelected : classSelect === item}"
+                            :href="classUrlPre + '&classification=' + item">{{item}}</a>
+                    </template>
+                </div>
+                <div class="marginTop-10" id="priceLimit">
+                    <label style="font-weight: bold; margin-right: 10px">排序方式</label>
+                    <select v-model="sel" @change="foodOrder">
+                        <option value="default" selected>默认排序</option>
+                        <option value="priceAsc">价格升序</option>
+                        <option value="priceDesc">价格降序</option>
+                        <option value="volumeAsc">销量升序</option>
+                        <option value="volumeDesc">销量降序</option>
+                    </select>
+                    <div style="display: inline-block; width: 60%; position: absolute; right: 0">
+                        <span style="float: right; color: gray">相关结果 {{resultsCount}} 条</span>
+                    </div>
+                </div>
+            </div>
+            <div class="container" id="foodTable">
+                <div class="emptyResult" :class="{empty : isEmptyResult}">
+                    <div style="position: absolute; left: 50%; top: 30%; transform: translateX(-50%) translateY(-50%); font-weight: bold">
+                        <div style="display: inline-block; width: 16px; height: 16px; line-height: 16px; border-radius: 8px; color: white; background-color: red; text-align: center">!</div>
+                        未找到相关餐品！请更换搜索词或搜索条件
+                    </div>
+                </div>
+                <div class="row">
+                    <template v-for="item in foods">
+                        <div class="tabUnit col-md-3">
+                            <a :href="'/TakeoutSystem/detail.html?foodid=' + item.foodId">
+                                <img class="unitImg" :src="item.image" alt="">
+                            </a>
+                            <div class="inTabUnit col-md-12">
+                                <a :href="'/TakeoutSystem/detail.html?foodid=' + item.foodId">
+                                    <strong>{{item.foodName}}</strong>
+                                </a><br>
+                                <span style="font-size: 14px">{{item.classification}}</span><br>
+                                <span class="price">￥{{item.price}}</span>
+                                <div style="display: inline-block; float: right; color: gray">销量 {{item.salesVolume}}</div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <hr style="height: 1px; color: gray">
+                <div class="pageToggle">
+                    <ul class="pageTog">
+                        <li><a :href="pageUrlPre">首页</a></li>
+                        <template v-for="item in pages">
+                            <li :class="{pageSelect : pageNum === item }">
+                                <a :href="pageUrlPre + '&page=' + item">{{item}}</a>
+                            </li>
+                        </template>
+                        <li><a :href="pageUrlPre + '&page=' + pages">尾页</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </body>
+    <footer id="ft" class="ft1" :class="{ft2 : fixed}">
+        <hr style="color: gray; height: 1px">
+        页脚
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/global.js"></script>
+    <script>
+        let selectColumn = new Vue({
+            el: "#outerDiv",
+            data: {
+                sel: "default",
+                pageUrlPre: null,
+                orderUrlPre: null,
+                classUrlPre: null,
+                classifications: null,
+                searchText: "",
+                foods: [],
+                pages: 0,
+                pageNum: 1,
+                resultsCount: 0,
+                quantityPerPage: 20,
+                isEmptyResult: 0,
+                classSelect: ""
+            },
+            methods: {
+                foodOrder: function (){
+                    window.location.replace(this.orderUrlPre + "&order=" + this.sel);
+                },
+                getFoodClassifications: function (){
+                    axios({
+                        method: "get",
+                        url: "/TakeoutSystem/getfoodclassifications",
+                        headers: {
+                            "Content-Type": "application/json; charset=utf-8"
+                        }
+                    }).then((res) => {
+                        this.classifications = res.data;
+                    }, (err) => {
+                        console.log("error: " + err);
+                    });
+                },
+                /*
+                检索
+                其中classification为结果分类，order为结果排序方式
+                 */
+                searchFoods: async function (searchWord, classification, order, offset, limit){
+                    await axios({
+                        method: "get",
+                        url: "/TakeoutSystem/searchfoods?search=" + searchWord +
+                            "&classification=" + classification +
+                            "&order=" + order +
+                            "&offset=" + offset +
+                            "&limit=" + limit,
+                        headers: {
+                            "Content-Type": "applicationn/json; charset=utf-8"
+                        }
+                    }).then((res) => {
+                        console.log(res.data);
+                        if(res.data.resultsCount===0){
+                            this.isEmptyResult = 1;
+                        }else{
+                            console.log(res.data.foodList);
+                            this.resultsCount = res.data.resultsCount;
+                            //计算分页数
+                            this.pages = Math.ceil(res.data.resultsCount/this.quantityPerPage);
+                            this.foods = res.data.foodList;
+                        }
+                    }, (err) => {
+                        console.log("error: " + err);
+                    });
+                    this.$nextTick(function (){
+                        footer1.isFixed();
+                    });
+                }
+            },
+            mounted: function (){
+                /*
+                分页栏中的页码点击后都会将关键词以及页码通过get方式传来，在页面加载完毕后从url中获取页码以及检索的关键字等信息，
+                其中quantityPerPage为每一页展示的条目数量，设置为20
+                 */
+                this.pageUrlPre = window.location.href.split("&page")[0];
+                this.orderUrlPre = window.location.href.split("&page")[0].split("&order")[0];
+                this.classUrlPre = window.location.href.split("&page")[0].split("&order")[0].split("&classification")[0];
+                //
+                let currentUrl = new URL(window.location.href);
+                let page = parseInt(currentUrl.searchParams.get("page"));
+                let order = currentUrl.searchParams.get("order");
+                let classification = currentUrl.searchParams.get("classification");
+                let searchText = currentUrl.searchParams.get("search");
+                //
+                this.searchText = searchText;
+                this.classSelect = classification;
+                this.getFoodClassifications();
+                if(order!==null){
+                    this.sel = order;
+                }
+                //
+                if (isNaN(page)) {
+                    //页码为空时展示第一页的内容
+                    this.searchFoods(searchText, classification, order, 0, this.quantityPerPage);
+                    this.pageNum = 1;
+                } else {
+                    //计算出每一页的起始条目下标，从该条目后一条开始往后二十条为本页所展示的内容
+                    this.searchFoods(searchText, classification, order, (page - 1) * this.quantityPerPage, this.quantityPerPage);
+                    this.pageNum = page;
+                }
+            }
+        });
+    </script>
+</html>

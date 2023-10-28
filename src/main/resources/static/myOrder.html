@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>网上订餐系统_我的订单</title>
+        <link rel="shortcut icon" href="img/icons/icon.png"/>
+        <link rel="stylesheet" type="text/css" href="css/global.css">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+        <style>
+            body{
+                background-color: lightgray;
+            }
+            #orderList tr{
+                border-top: 1px solid black;
+            }
+            #mainFrame{
+                width: 1100px;
+                padding: 20px;
+                margin-top: 60px;
+                margin-bottom: 10px;
+                background-color: white;
+            }
+            #model{
+                width: 100%;
+                height: 100vh;
+                background-color: rgba(0, 0, 0, 0.2);
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 10;
+            }
+            #form{
+                /*width: 440px;*/
+                /*height: 200px;*/
+                padding: 20px 40px;
+                position: fixed;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                border-radius: 5px;
+                background-color: white;
+            }
+            #form label{
+                font-weight: bold;
+            }
+            #form select{
+                border: 1px solid black;
+                border-radius: 2px;
+                outline: none;
+            }
+            .formMeta{
+                width: 180px;
+                margin-bottom: 10px;
+            }
+            .selectBtn{
+                width: 100px;
+            }
+            #submitBtns{
+                width: 100%;
+                margin-top: 10px;
+                display: flex;
+                justify-content: space-between;
+            }
+            #submitBtns input{
+                width: 40%;
+                border: 1px solid black;
+            }
+        </style>
+    </head>
+    <header id="hd1" class="hd1">
+        <a :href="titleHref">
+            <div class="titleIcon">
+                <img id="icon" class="icon" src="img/icons/icon.png" alt="">
+                <div id="title" class="title">
+                    <strong>网上订餐系统</strong>
+                </div>
+            </div>
+        </a>
+        <div id="searchBar" class="searchBar">
+            <input id="searchText" class="searchText" type="text" onkeydown="">
+            <input id="search" class="search" type="button" onclick="" value="搜索">
+        </div>
+        <div id="navBar_signed" class="navBar" :class="{navBarShow : isSign}">
+            <a :href="personalPage" @mouseover="showSet" @mouseleave="closeSet">{{username}}</a>/
+            <a href="">消息</a>/
+            <a :href="cartPage">购物车</a>/
+            <a :href="orderPage">我的订单</a>
+        </div>
+        <div id="setting" v-show="isShow">
+            <div><a href="" @click="signOut">退出登录</a></div>
+        </div>
+        <div id="navBar_noSigned" class="navBar" :class="{navBarShow : !isSign}">
+            <a href="/TakeoutSystem/login.html">登录</a>/
+            <a href="/TakeoutSystem/register.html">注册</a>
+        </div>
+    </header>
+    <body>
+        <div class="container" id="mainFrame">
+            <div>
+                <h5 style="font-weight: bold">我的订单({{orderCount}})</h5>
+            </div>
+            <hr>
+            <div style="display: flex; justify-items: center; margin-bottom: 20px; padding: 0 0px">
+                <input type="text" class="textBox" value="" placeholder=" 搜索订单" v-model="formData.searchText"
+                       style="width: 200px; border: 1px solid gray; border-radius: 3px">
+                <input type="button" class="btn btn-sm" value="搜索" @click="orderSearch"
+                       style="width: 60px; border: 1px solid gray; margin-left: 10px;">
+                <input v-show="isSearch" type="button" class="btn btn-sm" value="返回" @click="exitSearch"
+                       style="width: 60px; border: 1px solid gray; margin-left: 10px;">
+                <div v-show="isSearch" style="display: inline-flex; align-items: center; margin-left: auto">
+                    搜索结果：{{resultsCount}}
+                </div>
+            </div>
+            <div id="foodTab">
+                <div v-show="noResult"
+                     style="width: 1050px; height: 40px; line-height: 40px; text-align: center; font-weight: bold">
+                    暂无订单！
+                </div>
+                <table id="orderList" v-show="!noResult" style="width: 100%">
+                    <tr>
+                        <th style="width: 120px">图片</th>
+                        <th style="width: 140px">菜名</th>
+                        <th style="width: 100px">规格</th>
+                        <th style="width: 80px">单价</th>
+                        <th style="width: 80px">数量</th>
+                        <th style="width: 80px">总价</th>
+                        <th style="width: 160px">创建日期</th>
+                        <th style="width: 80px">状态</th>
+                        <th style="width: 120px">操作</th>
+                    </tr>
+                    <template v-for="item in orderList">
+                        <tr>
+                            <td><img :src="item.image" style="width: 100px"></td>
+                            <td>
+                                <a :href="'/TakeoutSystem/detail.html?foodid=' + item.food_id">{{item.food_name}}</a>
+                            </td>
+                            <td>{{item.specification}}</td>
+                            <td>￥{{item.price}}</td>
+                            <td>{{item.amount}}</td>
+                            <td>￥{{item.total_price}}</td>
+                            <td>{{item.create_date}}</td>
+                            <td>{{item.orderStatus}}</td>
+                            <td>
+                                <input type="button" class="button btn btn-sm" value="编辑"
+                                       @click="openEdit(item.order_id, item.food_id, item.specification, item.amount)"
+                                       :disabled="item.isRec"
+                                       style="border: 1px solid black">
+                                <input type="button" class="button btn btn-sm" value="取消订单"
+                                       @click="cancelOrder(item.order_id, item.food_name)"
+                                       style="border: 1px solid black">
+                            </td>
+                        </tr>
+                    </template>
+                </table>
+            </div>
+            <div id="model" v-show="isEdit">
+                <div id="form" class="form-group">
+                    <h4>订单信息编辑</h4>
+                    <hr>
+                    <div class="formMeta">
+                        <label>菜名：</label>{{foodName}}
+                    </div>
+                    <div>
+                        <div class="formMeta" style="display: inline-block">
+                            <label>单价：</label>￥ {{price}}
+                        </div>
+                        <div class="formMeta" style="display: inline-block">
+                            <label>总价：</label>￥ {{totalPrice}}
+                        </div>
+                    </div>
+                    <div class="formMeta" style="display: inline-block">
+                        <label>规格：</label>
+                        <select class="selectBtn" v-model="formData.specification">
+                            <template v-for="item in specifications">
+                                <option>{{item}}</option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="formMeta" style="display: inline-block">
+                        <label>数量：</label>
+                        <div class="amountSel">
+                            <input type="button" class="amountBtn" value="-" @click="amountReduce"/>
+                            <input type="text" class="amountTxt" v-model="formData.amount" @blur="onBlur" @input="onNumInput"/>
+                            <input type="button" class="amountBtn" value="+" @click="amountAdd"/>
+                        </div>
+                    </div>
+                    <div class="form-group" id="submitBtns">
+                        <input type="button" class="btn btn-default" id="submitBtn" @click="submitEdit" value="提交">
+                        <input type="button" class="btn btn-default" id="cancelBtn" @click="closeEdit" value="取消">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    <footer id="ft" class="ft1" :class="{ft2 : fixed}">
+        <hr style="color: gray; height: 1px">
+        页脚
+    </footer>
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/global.js"></script>
+    <script>
+        let mainFram = new Vue({
+            el: "#mainFrame",
+            data: {
+                orderList: [],
+                orderCount: 0,
+                noResult: 0,
+                resultsCount: 0,
+                isEdit: false,
+                isSearch: false,
+
+                orderId: 0,
+                foodName: null,
+                price: 0,
+                totalPrice: 0,
+                specifications: [],
+                formData: {
+                    searchText: "",
+                    specification: null,
+                    amount: 0,
+                }
+            },
+            methods: {
+                getOrders: function (){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/getuserorders",
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then((res)=>{
+                        if(res.data.length===0){
+                            this.noResult = 1;
+                        }else{
+                            this.orderList = res.data;
+                            this.orderCount = res.data.length;
+                        }
+                    }, (err)=>{
+                        alert("error: " + err);
+                        console.log("error: " + err);
+                    });
+                },
+                cancelOrder: function (orderId, foodName) {
+                    if(confirm("取消订单 " + orderId + "_" + foodName + "?")){
+                        axios({
+                            method: "post",
+                            url: "/TakeoutSystem/cancelorder",
+                            data: orderId,
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }).then((res) => {
+                            console.log(res.data);
+                            window.location.reload();
+                        }, (err) => {
+                            console.log("error: " + err);
+                            alert("error: " + err);
+                        });
+                    }
+                },
+                openEdit: function (orderId, foodId, specification, amount){
+                    this.orderId = orderId;
+                    this.formData.amount = amount;
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/getfood",
+                        data: foodId,
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    }).then((res)=>{
+                        this.foodName = res.data.foodName;
+                        this.price = res.data.price;
+                        this.totalPrice = this.price * this.formData.amount;
+                        this.specifications = res.data.specification.split("/");
+                        this.formData.specification = specification;
+                        this.isEdit = true;
+                    }, (err)=>{
+                        alert("error: " + err);
+                        console.log("error: " + err);
+                    });
+                },
+                submitEdit: function (){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/editorder",
+                        data: {
+                            "orderId": this.orderId,
+                            "totalPrice": this.totalPrice,
+                            "specification": this.formData.specification,
+                            "amount": this.formData.amount,
+                        },
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    }).then((res)=>{
+                        alert("订单信息修改成功！");
+                        window.location.reload();
+                    }, (err)=>{
+                        alert("error: " + err);
+                        console.log("error: " + err);
+                    })
+                },
+                closeEdit: function (){
+                    this.isEdit = false;
+                },
+                exitSearch: function (){
+                    this.getOrders();
+                    this.formData.searchText = "";
+                    this.noResult = 0;
+                    this.isSearch = false;
+                    setTimeout(function (){
+                        footer1.isFixed();
+                    }, 50);
+                },
+                orderSearch: function (){
+                    axios({
+                        method: "post",
+                        url: "/TakeoutSystem/searchorder",
+                        data: this.formData.searchText,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }).then((res)=>{
+                        this.isSearch = true;
+                        this.resultsCount = res.data.length;
+                        if(res.data.length===0){
+                            this.noResult = 1;
+                        }else{
+                            this.noResult = 0;
+                            this.orderList = res.data;
+                        }
+                        setTimeout(function (){
+                            footer1.isFixed();
+                        }, 50);
+                    }, (err)=>{
+                        alert(err);
+                        console.log(err);
+                    })
+                },
+                onBlur: function (){
+                    if(this.formData.amount<1){
+                        this.formData.amount = 1;
+                    }
+                    this.formData.amount = Math.floor(this.formData.amount);
+                },
+                totalCount: function (){
+                    this.totalPrice = this.price * this.formData.amount;
+                },
+                onNumInput: function (){
+                    this.totalCount();
+                },
+                amountReduce: function (){
+                    if(this.formData.amount>1){
+                        this.formData.amount--;
+                    }
+                    this.totalCount();
+                },
+                amountAdd: function (){
+                    this.formData.amount++;
+                    this.totalCount();
+                }
+            },
+            mounted: function (){
+                this.getOrders();
+                setTimeout(function (){
+                    footer1.isFixed();
+                }, 50);
+            }
+        });
+    </script>
+</html>

@@ -1,0 +1,79 @@
+#selectColumn{
+    width: 1100px;
+    padding: 10px 20px;
+    margin-top: 60px;
+    margin-bottom: 10px;
+    background-color: white;
+}
+#selectColumn a{
+    text-decoration: none;
+    margin-left: 10px;
+}
+.marginTop-10{
+    margin-top: 10px;
+}
+#priceLimit{
+    display: flex;
+    align-items: center;
+}
+#priceLimit input{
+    width: 80px;
+    margin: 0 5px;
+}
+#foodTable{
+    width: 1100px;
+    padding: 20px;
+    margin-bottom: 10px;
+    background-color: white;
+}
+.tabUnit{
+    height: 320px;
+    /*border: 1px solid black;*/
+}
+.inTabUnit{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tabUnit a{
+    text-decoration: none;
+}
+.unitImg{
+    width: 100%;
+    margin-bottom: 10px;
+}
+.price{
+    color: red;
+    font-size: 20px;
+}
+.pageToggle{
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    font-size: 0;
+    justify-content: center;
+}
+.pageTog{
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+.pageTog li{
+    font-size: 16px;
+    margin: 0 5px;
+    display: inline-block;
+}
+.pageTog a{
+    text-decoration: none;
+    border: 1px solid gray;
+    padding: 5px 10px;
+}
+.pageTog a:hover{
+    color: white;
+    background-color: lightgray;
+}
+.pageTog a:active{
+    color: white;
+    background-color: darkgray;
+}

@@ -1,0 +1,233 @@
+body a{
+    text-decoration: none;
+    color: black;
+}
+body input[type="button"]{
+    box-shadow: none !important;
+}
+body input[type="button"]:hover{
+    background-color: lightgray;
+}
+body input[type="button"]:active{
+    background-color: darkgray;
+}
+.hd1{
+    width: 100%;
+    height: 50px;
+    position: fixed;
+    top: 0;
+    z-index: 5;
+    background-color: orangered;
+}
+.titleIcon{
+    width: 240px;
+    height: 100%;
+    margin-left: 16px;
+    position: absolute;
+    /*border: 1px solid black;*/
+}
+.icon{
+    width: 36px;
+    float: left;
+    margin-top: 7px;
+}
+.title{
+    width: 160px;
+    height: 50px;
+    line-height: 50px;
+    font-size: 20px;
+    float: left;
+    margin-left:10px;
+    color:white;
+}
+#subtitleDiv{
+    width: 150px;
+    height: 50px;
+    line-height: 55px;
+    color: white;
+    position: absolute;
+    left: 200px;
+}
+.searchBar{
+    width: 350px;
+    height: 50px;
+    display: flex;
+    margin: auto;
+    /*margin-left: 250px;*/
+    align-items: center;
+}
+.searchText{
+    width: 300px;
+    height:30px;
+    border: none;
+    /*border-right: 1px solid black;*/
+    outline: none;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+}
+.search{
+    height: 30px;
+    width: 50px;
+    border: none;
+    font-size: 14px;
+    cursor: pointer;
+    background-color: white;
+    border-left: 1px solid lightgray;
+    border-top-right-radius: 2px;
+    border-bottom-right-radius: 2px;
+}
+.search:hover{
+    background-color: lightgray;
+}
+.search:active{
+    background-color: darkgray;
+}
+.navBar{
+    height: 50px;
+    line-height: 50px;
+    display: none;
+    float: right;
+    color: white;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+@media only screen and (max-width: 1150px) {
+    .hd1{
+        height: 100px;
+    }
+    .navBar{
+        float: left;
+        top: 50px;
+        left: 0;
+        right: auto;
+    }
+}
+@media only screen and (max-width: 800px){
+    .hd1{
+        height: 150px;
+    }
+    .searchBar{
+        float: left;
+        margin-top: 50px;
+        margin-left: 40px;
+    }
+    .navBar{
+        top: 100px;
+        left: 40px;
+    }
+}
+.navBar a{
+    margin-left: 6px;
+    margin-right: 10px;
+    color: white;
+    text-decoration: none;
+}
+.navBar a:hover{
+    color: deepskyblue;
+}
+.navBarShow{
+    display: block;
+}
+#setting{
+    /*display: none;*/
+    padding-left: 5px;
+    padding-right: 5px;
+    position: absolute;
+    top: 40px;
+    right: 230px;
+    border: 1px solid gray;
+    background-color: white;
+}
+#setting div{
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    color: dimgray;
+}
+#setting a{
+    text-decoration: none;
+}
+/**/
+.formFrame{
+    width: 600px;
+    /*height: 460px;*/
+    padding: 10px 40px 20px;
+    margin: 80px auto auto;
+    border: 1px solid lightgray;
+    border-radius: 4px;
+}
+.formFrame label{
+    margin-top: 10px;
+    font-weight: bold;
+}
+/**/
+.warningMessage{
+    display: none;
+    /*border: 1px solid black;*/
+}
+.showWarningMessage{
+    display: inline-block;
+}
+.warningMessage div{
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    margin-right: 5px;
+    background-color: red;
+    font-weight: bold;
+    font-family: 幼圆, serif;
+    color: white;
+    border-radius: 8px;
+}
+.warningMessage span{
+    color: red;
+}
+.amountSel{
+    vertical-align: top;
+    display: inline-flex;
+}
+.amountBtn{
+    width: 30px;
+    height: 24px;
+    font-size: 20px;
+    line-height: 20px;
+    color: white;
+    background-color: gray;
+    border: none;
+}
+.amountBtn:active{
+    background-color: dimgray;
+}
+.amountTxt{
+    width: 60px;
+    height: 24px;
+    text-align: center;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    outline: none;
+}
+.selectBtn:hover{
+    background-color: lightgray;
+}
+.selectBtn:active{
+    background-color: darkgray;
+}
+.ft1{
+    width: 100%;
+    height: 80px;
+    padding: 5px 20px;
+    color: gray;
+    /*opacity: 0.8;*/
+    background-color: whitesmoke;
+}
+.ft2{
+    position: absolute;
+    bottom: 0;
+}
+.managerSetting{
+    right: 80px !important;
+}

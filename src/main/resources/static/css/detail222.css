@@ -1,0 +1,71 @@
+#foodDetail{
+    width: 1100px;
+    margin-top: 60px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: white;
+}
+#foodNameCol{
+    padding: 10px 20px 0;
+    font-size: 24px;
+    font-weight: bold;
+}
+#foodImg{
+    width: 340px;
+}
+#foodInfo{
+    display: flex;
+    justify-content: left;
+    padding: 10px 20px;
+}
+.infoCol{
+    margin-left: 25px;
+    padding: 0 20px;
+    border-left: 1px solid lightgray;
+    /*border: 1px solid lightgray;*/
+}
+.info{
+    margin-bottom: 10px;
+}
+.info label{
+    margin-right: 10px;
+    font-weight: bold;
+}
+#price{
+    color: red;
+    font-weight: bold;
+    font-size: 32px;
+}
+.orderInfo select{
+    width: 80px;
+}
+.amountSel{
+    display: inline-block;
+    width: 100px;
+    height: 24px;
+    border: 1px solid black;
+}
+.amountBtn{
+    width: 30%;
+    height: 100%;
+    line-height: 24px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    display: inline-block;
+    background-color: lightgray;
+    color: white;
+}
+.amountBtn :hover{
+    background-color: black;
+}
+.amountBtn :active{
+    background-color: gray;
+}
+#belowInfoCol{
+    width: 1100px;
+    height: 200px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: white;
+}

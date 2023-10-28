@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.takeout.dao.FoodMapper">
+    <sql id="SelectFoodFields">
+        food_id, image, food_name, ingredients, specification, classification, price, sales_volume
+    </sql>
+    <sql id="SelectCollectionFields">
+        id, food_id, food_name, uname
+    </sql>
+    <sql id="InsertFoodFields">
+        image, food_name, ingredients, specification, classification, price
+    </sql>
+    <sql id="InsertCollectionFields">
+        food_id, food_name, uname
+    </sql>
+    <sql id="InsertOrderFields">
+        uname, food_id, specification, amount, total_price, address, tel, date, orderStatus
+    </sql>
+    <sql id="InsertCartFields">
+        uname, food_id, specification, amount
+    </sql>
+
+<!--  select  -->
+    <select id="searchFoods" resultType="Food">
+        select <include refid="SelectFoodFields"/>
+        from food
+        where food_name regexp #{searchText}
+        <if test="classification!=null">
+            and classification = #{classification}
+        </if>
+        and status = 0
+        <choose>
+            <when test="order=='priceAsc'">
+                order by price
+            </when>
+            <when test="order=='priceDesc'">
+                order by price desc
+            </when>
+            <when test="order=='volumeAsc'">
+                order by sales_volume
+            </when>
+            <when test="order=='volumeDesc'">
+                order by sales_volume desc
+            </when>
+            <otherwise/>
+        </choose>
+        <if test="limit!=0">
+            limit #{offset}, #{limit}
+        </if>
+    </select>
+    <select id="selectFoods" resultType="Food">
+        select <include refid="SelectFoodFields"/>
+        from food
+        where status = 0
+        <if test="limit!=0">
+            limit #{offset}, #{limit}
+        </if>
+    </select>
+    <select id="selectFoodClassifications" resultType="String">
+        select classification from food
+        where status = 0
+        group by classification
+    </select>
+    <select id="getFoodCount" resultType="Integer">
+        select count(food_id)
+        from food
+        where status = 0
+    </select>
+    <select id="getResultsCount" resultType="Integer">
+        select count(food_id)
+        from food
+        where food_name regexp #{searchText}
+        <if test="classification!=null">
+            and classification = #{classification}
+        </if>
+        and status = 0
+    </select>
+    <select id="selectFoodById" parameterType="Integer" resultType="Food">
+        select <include refid="SelectFoodFields"/>
+        from food
+        where food_id = #{id}
+    </select>
+    <select id="selectFoodFromCollection" resultType="FoodCollection">
+        select <include refid="SelectCollectionFields"/>
+        from collection
+        where food_id = #{foodId}
+        and uname = #{uname}
+    </select>
+    <select id="selectUserCollections" parameterType="String" resultType="Map">
+        select id, food.food_id, image, food.food_name, price
+        from food, collection
+        where food.food_id = collection.food_id
+        and uname = #{uname}
+    </select>
+    <select id="selectUserOrders" parameterType="String" resultType="Map">
+        select order_id, image, food.food_id, food_name, ordertab.specification, price, amount,
+               total_price, create_date, orderStatus
+        from food, ordertab
+        where food.food_id = ordertab.food_id
+        and uname = #{uname}
+        order by create_date desc
+    </select>
+    <select id="searchUserOrder" parameterType="String" resultType="Map">
+        select order_id, image, food.food_id, food_name, ordertab.specification, price, amount,
+        total_price, create_date, orderStatus
+        from food, ordertab
+        where food.food_id = ordertab.food_id
+        and uname = #{uname}
+        and food_name regexp #{searchText}
+    </select>
+    <select id="selectOrders" parameterType="Integer" resultType="Map">
+        select order_id, uname, food_name, ordertab.specification, amount, total_price, address, tel, create_date, orderStatus
+        from ordertab, food
+        where ordertab.food_id = food.food_id
+        limit #{offset}, #{limit}
+    </select>
+    <select id="getOrdersCount" resultType="Integer">
+        select count(order_id)
+        from ordertab
+    </select>
+    <select id="getUntreatedOrderCount" resultType="Integer">
+        select count(order_id)
+        from ordertab
+        where orderStatus = "待接单"
+    </select>
+    <select id="selectUserCarts" parameterType="String" resultType="Map">
+        select cart_id, food.food_id, image, food_name, classification, cart.specification, price, amount
+        from food, cart
+        where food.food_id = cart.food_id
+        and uname = #{uname}
+        and status = 0
+    </select>
+    <select id="selectCartById" parameterType="Integer" resultType="Map">
+        select cart.food_id, specification, amount
+        from cart
+        where cart_id = #{cartId}
+    </select>
+<!--  insert  -->
+    <insert id="addFood" parameterType="Food" keyProperty="foodId">
+        insert into food(<include refid="InsertFoodFields"/>)
+        values(#{image}, #{foodName}, #{ingredients}, #{specification}, #{classification}, #{price})
+    </insert>
+    <insert id="addToCollection" parameterType="FoodCollection">
+        insert into collection(<include refid="InsertCollectionFields"/>)
+        values(#{foodId}, #{foodName}, #{uname})
+    </insert>
+    <insert id="addOrder" parameterType="Order">
+        insert into ordertab(<include refid="InsertOrderFields"/>)
+        values(#{uname}, #{foodId}, #{specification}, #{amount}, #{totalPrice}, #{address}, #{tel}, #{create_date}, #{orderStatus})
+    </insert>
+    <insert id="addToCart" parameterType="Cart">
+        insert into cart(<include refid="InsertCartFields"/>)
+        values(#{uname}, #{foodId}, #{specification}, #{amount})
+    </insert>
+<!--  delete  -->
+    <delete id="delFromCollectInDetail">
+        delete from collection
+        where uname = #{uname}
+        and food_id = #{foodId}
+    </delete>
+    <delete id="delFromCollection" parameterType="Integer">
+        delete from collection
+        where id = #{collectId}
+    </delete>
+    <delete id="delFromOrdertab" parameterType="Integer">
+        delete from ordertab
+        where order_id = #{orderId}
+    </delete>
+    <delete id="delFromCart" parameterType="java.util.List">
+        delete from cart where cart_id in
+        <foreach collection="array" item="item" open="(" separator=", " close=")">
+            #{item}
+        </foreach>
+    </delete>
+<!--  update  -->
+    <update id="updateFoodInfo" parameterType="Food">
+        update food
+        set food_name = #{foodName},
+            classification = #{classification},
+            ingredients = #{ingredients},
+            specification = #{specification},
+            price = #{price}
+        <if test="image!=null">
+            , image = #{image}
+        </if>
+        where food_id = #{foodId}
+    </update>
+    <update id="updateFoodStatus" parameterType="java.util.List">
+        update food set status = 1
+        where food_id in
+        <foreach collection="array" item="item" open="(" separator=", " close=")">
+            #{item}
+        </foreach>
+    </update>
+    <update id="updateFoodSales" parameterType="Integer">
+        update food set sales_volume = sales_volume + #{amount}
+        where food_id = #{id}
+    </update>
+    <update id="updateOrderInfo">
+        update ordertab set specification = #{specification}, amount = #{amount}, total_price = #{totalPrice}
+        where order_id = #{orderId}
+    </update>
+    <update id="updateCartInfo">
+        update cart
+        set specification = #{specification}, amount = #{amount}
+        where cart_id = #{cartId}
+    </update>
+    <update id="receivingOrder" parameterType="Integer">
+        update ordertab
+        set orderStatus = "已接单"
+        where order_id = #{orderId}
+    </update>
+    <update id="cancelReceivingOrder" parameterType="Integer">
+        update ordertab
+        set orderStatus = "待接单"
+        where order_id = #{orderId}
+    </update>
+
+<!-- test -->
+    <select id="testMapSel" parameterType="String" resultType="Map">
+        select * from collection
+        where uname = #{uname}
+    </select>
+</mapper>

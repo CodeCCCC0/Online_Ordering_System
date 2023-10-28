@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.takeout.dao.UserMapper">
+    <sql id="selectFields">
+        uname, user_image, pwd, email, tel, user_type, create_date
+    </sql>
+    <sql id="insertField">
+        uname, pwd, email, tel, user_type, create_date
+    </sql>
+<!-- Select -->
+    <select id="selectUserByUname" parameterType="String" resultType="User">
+        select <include refid="selectFields"/>
+        from user
+        where uname = #{uname}
+    </select>
+    <select id="selectUserByEmail" parameterType="String" resultType="User">
+        select <include refid="selectFields"/>
+        from user
+        where email = #{email}
+    </select>
+<!-- Insert -->
+    <insert id="addUser" parameterType="User" keyProperty="uname">
+        insert into user(<include refid="insertField"/>)
+        values(#{uname}, #{pwd}, #{email}, #{tel}, #{userType}, #{createDate})
+    </insert>
+<!-- Update -->
+    <update id="updateUserPwd">
+        update user set pwd = #{pwd}
+        where uname = #{uname}
+    </update>
+    <update id="updateUserInfo" parameterType="User">
+        update user
+        set tel = #{tel}, email = #{email}
+        <if test="userImage!=null">
+            , user_image = #{userImage}
+        </if>
+        where uname = #{uname}
+    </update>
+</mapper>
