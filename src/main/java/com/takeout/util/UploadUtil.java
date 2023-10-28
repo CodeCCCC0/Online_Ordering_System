@@ -11,7 +11,7 @@ import java.util.UUID;
 public class UploadUtil {
     public static String ALI_DOMAIN = "https://buckchtest.oss-cn-hangzhou.aliyuncs.com/";
     public static String END_POINT = "https://oss-cn-hangzhou.aliyuncs.com";
-    public static String ASSESSKEY_ID = "LTAI5tDmoFuwoNe2R7JnD4DY";
+    public static String ASSESSKEY_ID = "";
     public static String ASSESSKEY_SECRET = "Wm0Nmuruo4OVaRhXVYx6FJaRX4gUG6";
 
     public static String uploadImage(MultipartFile file) throws IOException {
